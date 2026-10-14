@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="VaultGuard fraud monitoring dashboard frontend prototype">
+  <title>VaultGuard | Risk Overview</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="mobile-menu icon-button" id="mobileMenu" aria-label="Toggle navigation">☰</button>
+      <a class="brand" href="#" aria-label="VaultGuard home">
+        <span class="brand-mark">⬟</span><span>Vault<span class="brand-orange">Guard</span></span>
+      </a>
+      <div class="top-controls">
+        <label class="sr-only" for="regionSelect">Business region</label>
+        <select id="regionSelect" class="top-select"><option>EU Payments</option><option>AU Cards</option><option>APAC Cards</option><option>ME Cards</option></select>
+        <label class="sr-only" for="timeSelect">Time range</label>
+        <select id="timeSelect" class="top-select"><option>Last 24 hours</option><option>Last 7 days</option><option>Last 30 days</option></select>
+        <label class="sr-only" for="currencySelect">Currency</label>
+        <select id="currencySelect" class="top-select"><option value="USD">USD</option><option value="EUR">EUR</option><option value="NGN">NGN</option><option value="GBP">GBP</option></select>
+        <div class="global-search"><span>⌕</span><input id="globalSearch" type="search" placeholder="Search transactions, customers, merchants..." aria-label="Search all records"></div>
+        <button class="primary-button" id="createAlertBtn">＋ <span>Create Alert</span></button>
+        <button class="icon-button" id="exportBtn" title="Export current table" aria-label="Export current table">⇩</button>
+        <button class="icon-button notification-button" id="notificationBtn" title="Notifications" aria-label="Notifications">♧<span class="notification-dot"></span></button>
+        <button class="icon-button" id="settingsBtn" title="Settings" aria-label="Settings">⚙</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top"><button id="collapseSidebar" class="collapse-button">‹ <span>Hide Panel</span></button></div>
+        <nav id="mainNav" aria-label="Main navigation">
+          <button class="nav-item active" data-page="Overview"><span class="nav-icon">▦</span><span class="nav-label">Overview</span></button>
+          <button class="nav-item" data-page="Transactions"><span class="nav-icon">⇄</span><span class="nav-label">Transactions</span></button>
+          <button class="nav-item" data-page="Fraud Detection"><span class="nav-icon">⬡</span><span class="nav-label">Fraud Detection</span></button>
+          <button class="nav-item" data-page="Investigations"><span class="nav-icon">⌕</span><span class="nav-label">Investigations</span></button>
+          <button class="nav-item" data-page="Customers"><span class="nav-icon">♧</span><span class="nav-label">Customers</span></button>
+          <button class="nav-item" data-page="Merchants"><span class="nav-icon">▤</span><span class="nav-label">Merchants</span></button>
+          <button class="nav-item" data-page="Rules & Models"><span class="nav-icon">⚙</span><span class="nav-label">Rules &amp; Models</span></button>
+          <button class="nav-item" data-page="Alerts"><span class="nav-icon">◇</span><span class="nav-label">Alerts</span><span class="nav-count" id="alertNavCount">2</span></button>
+          <button class="nav-item" data-page="Reports"><span class="nav-icon">▧</span><span class="nav-label">Reports</span></button>
+          <button class="nav-item" data-page="Compliance"><span class="nav-icon">⬡</span><span class="nav-label">Compliance</span></button>
+          <button class="nav-item" data-page="Admin Panel"><span class="nav-icon">✣</span><span class="nav-label">Admin Panel</span></button>
+        </nav>
+        <div class="sidebar-foot"><span class="avatar">VG</span><div class="profile-copy"><strong>Demo Analyst</strong><small>Risk Operations</small></div><span class="demo-chip">DEMO</span></div>
+      </aside>
+
+      <main class="main-content">
+        <div class="page-heading">
+          <div><p class="eyebrow">TRANSACTION SECURITY</p><h1 id="pageTitle">Risk Overview</h1><p id="pageSubtitle">Real-time monitoring of transaction risk and fraud indications.</p></div>
+          <div class="heading-actions"><button class="secondary-button" id="filtersBtn">Filters <span>☷</span></button></div>
+        </div>
+
+        <section class="filter-strip hidden" id="filterStrip">
+          <label>Risk level<select id="riskFilter"><option value="all">All risk levels</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+          <label>Status<select id="statusFilter"><option value="all">All statuses</option><option>Monitoring</option><option>Investigating</option><option>Resolved</option><option>Pending Review</option></select></label>
+          <button class="text-button" id="clearFilters">Clear filters</button>
+        </section>
+
+        <section id="overviewPage" class="page-section">
+          <div class="overview-grid">
+            <article class="card risk-card">
+              <div class="card-heading"><h2>Risk Health Score</h2><button class="text-button" data-goto="Fraud Detection">View details →</button></div>
+              <div class="risk-content">
+                <div class="score-wrap"><div class="score-ring"><div><strong>1,258</strong><small>Risk score</small></div></div><span class="change-pill">↑ 5.2%</span></div>
+                <div class="contributors"><h3>Top Contributors <span class="demo-label">SAMPLE</span></h3>
+                  <div class="contributor"><div><span>Unusual velocity</span><b>26%</b></div><div class="bar"><i style="width:26%"></i></div></div>
+                  <div class="contributor"><div><span>New device surge</span><b>6%</b></div><div class="bar"><i style="width:6%"></i></div></div>
+                  <div class="contributor"><div><span>Geo mismatch</span><b>14%</b></div><div class="bar"><i style="width:14%"></i></div></div>
+                  <div class="contributor"><div><span>High-risk BIN range</span><b>71%</b></div><div class="bar"><i style="width:71%"></i></div></div>
+                  <div class="contributor"><div><span>Merchant anomaly</span><b>13%</b></div><div class="bar"><i style="width:13%"></i></div></div>
+                </div>
+              </div>
+            </article>
+            <article class="card chart-card">
+              <div class="card-heading"><h2>Risk Trend Timeline</h2><button class="text-button" id="compareBtn">Compare periods ↗</button></div>
+              <div class="chart-legend"><span><i class="legend-orange"></i>Suspicious flagged</span><span><i class="legend-dark"></i>Blocked</span><span><i class="legend-teal"></i>Manual reviews</span></div>
+              <svg class="trend-chart" viewBox="0 0 520 230" role="img" aria-label="Illustrative risk trend chart">
+                <g class="chart-grid"><path d="M48 20H500 M48 65H500 M48 110H500 M48 155H500 M48 200H500"/><path d="M48 20V200 M138 20V200 M228 20V200 M318 20V200 M408 20V200 M500 20V200"/></g>
+                <g class="chart-labels"><text x="10" y="204">0</text><text x="2" y="159">80</text><text x="0" y="114">160</text><text x="0" y="69">240</text><text x="0" y="24">320</text><text x="48" y="222">04:00</text><text x="132" y="222">08:00</text><text x="222" y="222">12:00</text><text x="312" y="222">16:00</text><text x="402" y="222">20:00</text></g>
+                <polyline class="line-orange" points="48,100 92,128 138,105 183,78 228,86 273,70 318,45 363,58 408,70 454,53 500,62"/>
+                <polyline class="line-dark" points="48,151 92,161 138,142 183,123 228,157 273,166 318,153 363,164 408,172 454,160 500,165"/>
+                <polyline class="line-teal" points="48,169 92,176 138,165 183,146 228,182 273,190 318,174 363,182 408,193 454,185 500,188"/>
+              </svg>
+              <p class="chart-note">Illustrative sample data · not connected to a live model</p>
+            </article>
+          </div>
+          <article class="card table-card">
+            <div class="card-heading"><div><h2>Top Alerts &amp; Incidents</h2><p class="muted">Prioritized items requiring attention</p></div><button class="text-button" data-goto="Alerts">View all alerts →</button></div>
+            <div class="table-scroll"><table><thead><tr><th>Severity</th><th>Alert</th><th>Segment</th><th>Started</th><th>Status</th><th>Owner</th></tr></thead><tbody id="overviewAlertsBody"></tbody></table></div>
+          </article>
+        </section>
+
+        <section id="dataPage" class="page-section hidden">
+          <article class="card table-card">
+            <div class="card-heading"><div><h2 id="dataHeading">Transactions</h2><p class="muted" id="dataDescription">Review the sample records available in this frontend prototype.</p></div><div class="inline-actions"><button class="secondary-button" id="addSampleBtn">＋ Add sample</button><button class="secondary-button" id="pageExportBtn">Export CSV</button></div></div>
+            <div class="table-scroll"><table><thead id="dataTableHead"></thead><tbody id="dataTableBody"></tbody></table></div>
+            <p class="table-footnote" id="tableFootnote">Sample records only. No real customer or payment information is used.</p>
+          </article>
+          <article class="card detail-card hidden" id="detailCard"><div class="card-heading"><h2 id="detailTitle">Details</h2><button class="text-button" id="closeDetail">Close ✕</button></div><div id="detailContent"></div></article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="alertModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <form class="modal" id="alertForm">
+      <div class="card-heading"><div><p class="eyebrow">WORKFLOW</p><h2 id="modalTitle">Create a demo alert</h2></div><button type="button" class="icon-button" id="closeModal" aria-label="Close dialog">✕</button></div>
+      <label>Alert title<input id="newAlertTitle" maxlength="100" required placeholder="e.g. Unusual transaction velocity"></label>
+      <label>Severity<select id="newAlertSeverity"><option>High</option><option selected>Medium</option><option>Low</option></select></label>
+      <label>Segment<input id="newAlertSegment" maxlength="50" required placeholder="e.g. EU Payments"></label>
+      <label>Owner<input id="newAlertOwner" maxlength="60" required placeholder="e.g. Demo Analyst"></label>
+      <div class="modal-actions"><button type="button" class="secondary-button" id="cancelModal">Cancel</button><button type="submit" class="primary-button">Create alert</button></div>
+      <p class="muted tiny">This creates a local sample record only. It does not send a real alert.</p>
+    </form>
+  </div>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
