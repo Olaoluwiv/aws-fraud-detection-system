@@ -1,5 +1,45 @@
 const $ = (id) => document.getElementById(id);
 
+const API_BASE_URL = "http://127.0.0.1:8000";
+
+async function loadTransactionsFromAPI() {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/transactions`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    state.transactions = result.transactions.map((transaction) => ({
+      id: transaction.transaction_id,
+      customer: transaction.customer ?? "—",
+      merchant: transaction.merchant ?? "—",
+      amount: transaction.amount,
+      currency: transaction.currency ?? "USD",
+      type: transaction.type ?? "Transaction",
+      risk: transaction.risk_level,
+      status: transaction.status,
+      location: transaction.location ?? "Unknown",
+    }));
+
+    if (state.page !== "Overview") {
+      renderDataPage();
+    }
+
+    showToast("Transactions loaded from the VaultGuard API.");
+  } catch (error) {
+    console.error("Could not load transactions:", error);
+    showToast(
+      "Could not load transactions. Check the API server."
+    );
+  }
+}
+
+
 const pageInfo = {
   "Overview": ["Risk Overview", "Real-time monitoring of transaction risk and fraud indications."],
   "Transactions": ["Transactions", "Search, review and inspect transaction records."],
@@ -73,11 +113,22 @@ const tableConfigs = {
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-function money(amount) {
-  const currency = $("currencySelect").value;
-  const locale = currency === "NGN" ? "en-NG" : currency === "EUR" ? "de-DE" : currency === "GBP" ? "en-GB" : "en-US";
-  return new Intl.NumberFormat(locale, {style:"currency", currency, maximumFractionDigits:2}).format(Number(amount) || 0);
+
+function money(amount, currency = $("currencySelect").value) {
+  const locales = {
+    USD: "en-US",
+    EUR: "de-DE",
+    NGN: "en-NG",
+    GBP: "en-GB",
+  };
+
+  return new Intl.NumberFormat(locales[currency] || "en-US", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2,
+  }).format(Number(amount) || 0);
 }
+
 function pill(value) {
   const v = String(value || "");
   const cls = v.toLowerCase().replace(/[^a-z]+/g,"-").replace(/^-|-$/g,"");
@@ -136,7 +187,7 @@ function getRowsForPage(page) {
   return config ? (state[config.key] || []).filter(matchesQuery) : [];
 }
 function displayValue(key, value, row) {
-  if (key === "amount") return money(value);
+  if (key === "amount") return money(value, row.currency || $("currencySelect").value);
   if (key === "risk" || key === "severity" || key === "status") return pill(value);
   if (key === "metric" || key === "control" || key === "setting") return `<strong>${escapeHTML(value)}</strong>`;
   return escapeHTML(value);
@@ -182,21 +233,69 @@ function closeAlertModal() {
   $("alertModal").classList.add("hidden");
   $("alertForm").reset();
 }
-function addSample() {
+
+async function addSample() {
+  // Keep the existing alert workflow unchanged.
   if (state.page === "Alerts") {
     openAlertModal();
     return;
   }
+
+  // Create a new synthetic transaction.
   const n = state.transactions.length + 1;
   const high = n % 3 === 0;
-  state.transactions.unshift({
-    id:`TXN-${10420+n}`,customer:"CUS-208",merchant:high?"Metro Electronics":"Northstar Market",
-    amount:high?1420.75:85.40,currency:$("currencySelect").value,type:"Online purchase",
-    risk:high?"High":n%2?"Low":"Medium",status:high?"Flagged":"Approved",location:high?"Unusual":"Usual"
-  });
-  renderDataPage();
-  showToast("A synthetic sample transaction was added.");
+
+  const transaction = {
+    transaction_id: `TXN-${Date.now()}`,
+    customer: "CUS-208",
+    merchant: high
+      ? "Metro Electronics"
+      : "Northstar Market",
+    amount: high ? 1420.75 : 85.40,
+    currency: $("currencySelect").value,
+    type: "Online purchase",
+    status: high ? "Flagged" : "Approved",
+    location: high ? "Unusual" : "Usual",
+  };
+
+  try {
+    // Send the transaction to the FastAPI backend.
+    const response = await fetch(
+      `${API_BASE_URL}/api/transactions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(transaction),
+      }
+    );
+
+    // Display an error returned by the backend.
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+
+      throw new Error(
+        errorBody.detail ||
+        `Request failed with status ${response.status}`
+      );
+    }
+
+    // Reload records from SQLite through the API.
+    await loadTransactionsFromAPI();
+
+    showToast(
+      `Transaction ${transaction.transaction_id} saved successfully.`
+    );
+  } catch (error) {
+    console.error("Could not save transaction:", error);
+
+    showToast(
+      `Could not save transaction: ${error.message}`
+    );
+  }
 }
+
 function inspectRecord(index) {
   const rows = getRowsForPage(state.page);
   const row = rows[index];
@@ -220,8 +319,22 @@ function exportCurrentCSV() {
   }
   const cols = config.cols.map(([key,label])=>({key,label}));
   const csvCell = value => `"${String(value ?? "").replace(/"/g,'""')}"`;
-  const csv = [cols.map(c=>csvCell(c.label)).join(","),...rows.map(row=>cols.map(c=>csvCell(c.key==="amount"?money(row[c.key]):row[c.key])).join(","))].join("\r\n");
-  const blob = new Blob(["\ufeff",csv],{type:"text/csv;charset=utf-8;"});
+const csv = [
+  cols.map((c) => csvCell(c.label)).join(","),
+  ...rows.map((row) =>
+    cols
+      .map((c) =>
+        csvCell(
+          c.key === "amount"
+            ? money(row[c.key], row.currency || $("currencySelect").value)
+            : row[c.key]
+        )
+      )
+      .join(",")
+  ),
+].join("\r\n");
+
+const blob = new Blob(["\ufeff",csv],{type:"text/csv;charset=utf-8;"});
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -291,3 +404,4 @@ $("closeDetail").addEventListener("click",()=>$("detailCard").classList.add("hid
 
 renderOverview();
 navigate("Overview");
+loadTransactionsFromAPI();
