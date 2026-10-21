@@ -107,3 +107,45 @@ def test_list_transactions_endpoint(client):
     assert transaction["transaction_id"] == "TEST-001"
     assert transaction["amount"] == 100.0
     assert transaction["risk_level"] == "Low"
+
+
+def test_create_transaction_endpoint(client):
+    payload = {
+        "transaction_id": "TEST-002",
+        "customer": "New Test Customer",
+        "merchant": "Test Online Store",
+        "amount": 100.0,
+        "currency": "USD",
+        "type": "Purchase",
+        "status": "Pending",
+        "location": "Usual",
+    }
+
+    response = client.post("/api/transactions", json=payload)
+
+    assert response.status_code == 201
+
+    data = response.json()
+
+    assert data["transaction_id"] == "TEST-002"
+    assert data["customer"] == "New Test Customer"
+    assert data["amount"] == 100.0
+    assert data["risk_level"] == "Low"
+
+
+def test_create_duplicate_transaction_returns_409(client):
+    payload = {
+        "transaction_id": "TEST-001",
+        "customer": "Duplicate Test Customer",
+        "merchant": "Test Online Store",
+        "amount": 100.0,
+        "currency": "USD",
+        "type": "Purchase",
+        "status": "Pending",
+        "location": "Usual",
+    }
+
+    response = client.post("/api/transactions", json=payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Transaction ID already exists"
