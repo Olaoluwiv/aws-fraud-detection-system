@@ -1,4 +1,3 @@
-
 name: VaultGuard Backend CI
 
 on:
@@ -28,3 +27,6 @@ jobs:
 
       - name: Run API tests
         run: python -m pytest tests/ -v
+
+      - name: Build backend Docker image
+        run: docker build -t vaultguard-backend:ci .
