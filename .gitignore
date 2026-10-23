@@ -19,3 +19,5 @@ Thumbs.db
 # Local SQLite database
 backend/*.db
 backend/*.db-*
+
+data/

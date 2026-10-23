@@ -1,0 +1,19 @@
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vaultguard-backend:compose
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: vaultguard-frontend:compose
+    ports:
+      - "8081:80"
+    restart: unless-stopped
