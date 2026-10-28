@@ -19,5 +19,20 @@ Thumbs.db
 # Local SQLite database
 backend/*.db
 backend/*.db-*
+vaultguard-backup.db
 
 data/
+
+# Terraform generated files and state
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+terraform.tfvars
+terraform.tfvars.json
+
+
+# Terraform working directory
+**/.terraform/
