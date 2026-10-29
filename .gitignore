@@ -36,3 +36,4 @@ terraform.tfvars.json
 
 # Terraform working directory
 **/.terraform/
+vaultguard-backend-v1.0.0.tar
